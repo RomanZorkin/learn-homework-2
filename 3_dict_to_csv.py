@@ -29,7 +29,7 @@ def main():
     В ней надо заменить pass на ваш код
     """
     with open(target_file, 'w', encoding='utf-8') as csv_file:
-        head = set().union(*(man.keys() for man in personal))
+        head = ['name', 'age', 'job', 'salary']
         writer = csv.DictWriter(csv_file, head, delimiter=';')
         writer.writeheader()
         for man in personal:

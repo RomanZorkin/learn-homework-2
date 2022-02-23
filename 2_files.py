@@ -15,8 +15,10 @@ import tempfile
 from pathlib import Path
 from urllib import request
 
+import httpx
+
 TARGET_PATH = Path('files')
-FINISH_FILE = Path('files/referat2.txt')
+FINISH_FILE = TARGET_PATH / 'referat2.txt'
 # In the end of url we see dl=1 - this need for downloading file
 # from dropbox site. In original url dl=0
 file_url = 'https://www.dropbox.com/s/sipsmqpw1gwzd37/referat.txt?dl=1'
@@ -31,20 +33,8 @@ def file_downloader(url: str) -> str:
     Returns:
         str: file text.
     """
-    with tempfile.TemporaryDirectory(dir=TARGET_PATH) as tmp_path:
-        tmp_file = f'{tmp_path}/python.txt'
-        request.urlretrieve(url, tmp_file)
-        with open(tmp_file, 'r', encoding='utf-8') as referat:
-            return referat.read()
-
-
-def file_reader() -> None:
-    """Function for extracting text from the target file."""
-    file_text = file_downloader(file_url)
-    print(f'Длина строки файла referat составляет {len(file_text)} символов.')
-    file_writer(
-        text_handler(file_text),
-    )
+    file_data = httpx.get(file_url, follow_redirects=True)
+    return file_data.text
 
 
 def text_handler(text: str) -> str:
@@ -59,19 +49,13 @@ def text_handler(text: str) -> str:
     Returns:
         str: new file text
     """
-    text_list = text.split(' ')
+    text_list = text.split()
+    text = text.replace('.', '!', text.count('.'))
     print(f'Количесвто слов в файле referat составляет: {len(text_list)}')
-    for number, _ in enumerate(text_list):
-        text_list[number] = text_list[number].replace('.', '!')
-    return ' '.join(text_list)
+    return text
 
 
 def file_writer(text: str) -> None:
-    """Function write file with new text.
-
-    Args:
-        text (str): text for writing
-    """
     with open(FINISH_FILE, 'w', encoding='utf-8') as new_referat:
         new_referat.write(text)
         print(
@@ -86,7 +70,11 @@ def main():
     Эта функция вызывается автоматически при запуске скрипта в консоли
     В ней надо заменить pass на ваш код
     """
-    file_reader()
+    file_text = file_downloader(file_url)
+    print(f'Длина строки файла referat составляет {len(file_text)} символов.')
+    file_writer(
+        text_handler(file_text),
+    )
 
 
 if __name__ == '__main__':
